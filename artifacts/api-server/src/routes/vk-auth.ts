@@ -6,6 +6,7 @@ import {
   decryptToken,
   encryptToken,
   exchangeCode,
+  createCodeChallenge,
   getSessionCookieOptions,
   getVkAuthorizationUrl,
   getVkRedirectUri,
@@ -16,7 +17,7 @@ import {
 const router: IRouter = Router();
 const oauthStates = new Map<
   string,
-  { redirectUri: string; expiresAt: number }
+  { redirectUri: string; codeVerifier: string; expiresAt: number }
 >();
 
 function cleanupOauthStates(): void {
@@ -36,9 +37,11 @@ router.get("/auth/vk/start", (req, res): void => {
   try {
     cleanupOauthStates();
     const state = randomId();
+    const codeVerifier = randomId();
     const redirectUri = getVkRedirectUri(req);
     oauthStates.set(state, {
       redirectUri,
+      codeVerifier,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
     res.cookie("vk_oauth_state", state, {
@@ -48,6 +51,7 @@ router.get("/auth/vk/start", (req, res): void => {
     res.redirect(getVkAuthorizationUrl({
       state,
       redirectUri,
+      codeChallenge: createCodeChallenge(codeVerifier),
     }));
   } catch (error) {
     req.log.error({ err: error }, "Unable to start VK authorization");
@@ -58,6 +62,7 @@ router.get("/auth/vk/start", (req, res): void => {
 router.get("/auth/vk/callback", async (req, res): Promise<void> => {
   const state = typeof req.query.state === "string" ? req.query.state : "";
   const code = typeof req.query.code === "string" ? req.query.code : "";
+  const deviceId = typeof req.query.device_id === "string" ? req.query.device_id : "";
   const stateData = oauthStates.get(state);
   oauthStates.delete(state);
 
@@ -65,7 +70,7 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
     res.status(400).send("VK authorization state is invalid or expired. Start login again.");
     return;
   }
-  if (!code) {
+  if (!code || !deviceId) {
     const description = typeof req.query.error_description === "string"
       ? req.query.error_description
       : "VK authorization was cancelled.";
@@ -75,6 +80,9 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
   try {
     const tokenData = await exchangeCode({
       code,
+      codeVerifier: stateData.codeVerifier,
+      deviceId,
+      state,
       redirectUri: stateData.redirectUri,
     });
     const profile = await getVkUser(tokenData.access_token, tokenData.user_id);

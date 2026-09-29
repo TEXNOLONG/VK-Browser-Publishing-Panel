@@ -32,7 +32,7 @@
 
 ## Architecture decisions
 
-- Standalone VK OAuth uses the legacy `/authorize` → `/access_token` flow and keeps VK access tokens encrypted in the database.
+- VK ID Web authorization uses Authorization Code + PKCE, with the code exchanged server-side and VK access tokens encrypted in the database.
 - The API is exposed through the `/api` artifact route while the web app stays at `/`.
 - Replit-managed `DATABASE_URL` and `SESSION_SECRET` are preferred over local values.
 
