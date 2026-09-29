@@ -94,6 +94,7 @@ router.post("/vk/posts", async (req, res): Promise<void> => {
     const result = await callVkApi<{ post_id: number }>("wall.post", session.accessToken, {
       owner_id: parsed.data.ownerId,
       message: parsed.data.message,
+      ...(parsed.data.ownerId < 0 ? { from_group: 1 } : {}),
     });
     res.status(201).json(CreateVkPostResponse.parse({
       ownerId: parsed.data.ownerId,

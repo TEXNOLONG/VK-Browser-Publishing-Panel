@@ -32,13 +32,13 @@
 
 ## Architecture decisions
 
-- VK ID Web authorization uses Authorization Code + PKCE, with the code exchanged server-side and VK access tokens encrypted in the database.
+- VK OAuth uses a server-side authorization-code exchange for a Standalone VK application; VK access tokens are encrypted in the database.
 - The API is exposed through the `/api` artifact route while the web app stays at `/`.
 - Replit-managed `DATABASE_URL` and `SESSION_SECRET` are preferred over local values.
 
 ## Product
 
-- Sign in with VK ID.
+- Sign in with VK OAuth.
 - Choose a personal page or managed community.
 - Review and publish a text post.
 
@@ -50,6 +50,7 @@
 
 - The VK trusted redirect URL must match `VK_REDIRECT_URI` exactly, including `/api/auth/vk/callback`.
 - The current Replit dev domain is used in the checked-in non-secret redirect configuration; update it if the domain changes.
+- The Standalone VK application must be allowed to request the `wall` permission; VK may require approval for this permission.
 
 ## Pointers
 
