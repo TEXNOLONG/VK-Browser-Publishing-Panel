@@ -11,7 +11,7 @@
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL`, `SESSION_SECRET`, `VK_APP_ID`, `VK_APP_SECRET`, `VK_REDIRECT_URI`
-- Local VK values belong in `.env` (copy `.env.example` first). Replit injects `DATABASE_URL` and `SESSION_SECRET` automatically.
+- `VK_APP_SECRET` must be stored as a Replit Secret and never committed to `.replit`, `.env`, or source code. Replit injects `DATABASE_URL` and `SESSION_SECRET` automatically.
 
 ## Stack
 
