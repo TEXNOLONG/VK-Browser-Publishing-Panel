@@ -64,9 +64,14 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
   const code = typeof req.query.code === "string" ? req.query.code : "";
   const deviceId = typeof req.query.device_id === "string" ? req.query.device_id : "";
   const stateData = oauthStates.get(state);
-  oauthStates.delete(state);
 
   if (!stateData || stateData.expiresAt <= Date.now() || req.cookies?.vk_oauth_state !== state) {
+    req.log.warn({
+      hasStateData: Boolean(stateData),
+      hasStateCookie: req.cookies?.vk_oauth_state === state,
+      hasCode: Boolean(code),
+      hasDeviceId: Boolean(deviceId),
+    }, "VK authorization state validation failed");
     res.status(400).send("VK authorization state is invalid or expired. Start login again.");
     return;
   }
@@ -100,6 +105,7 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
       expiresAt,
     });
 
+    oauthStates.delete(state);
     res.clearCookie("vk_oauth_state", getSessionCookieOptions(req));
     res.cookie("vk_session", sessionId, {
       ...getSessionCookieOptions(req),
