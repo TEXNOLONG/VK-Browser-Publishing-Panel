@@ -26,3 +26,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 VK_APP_ID = "54795963"
+VK_REDIRECT_URI = "https://10dc6e81-e6dd-420b-a656-0207367477e7-00-3p1qakqz0e9jq.sisko.replit.dev/api/auth/vk/callback"
