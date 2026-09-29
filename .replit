@@ -27,6 +27,7 @@ channel = "stable-25_05"
 [userenv.shared]
 VK_APP_ID = "54795963"
 VK_REDIRECT_URI = "https://8b252972-c299-40d7-b6c2-f49a49e30701-00-3lyvagotcr2t7.pike.replit.dev/api/auth/vk/callback"
+VK_APP_SECRET = "Oipip2JerHZDMYqUyLrs"
 
 [[ports]]
 localPort = 8080
