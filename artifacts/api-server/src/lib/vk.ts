@@ -1,8 +1,8 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-const VK_AUTH_URL = "https://oauth.vk.com/authorize";
-const VK_TOKEN_URL = "https://oauth.vk.com/access_token";
-const VK_API_URL = process.env.VK_API_URL ?? "https://api.vk.com/method";
+const VK_ID_AUTH_URL = "https://id.vk.ru/authorize";
+const VK_ID_TOKEN_URL = "https://id.vk.ru/oauth2/auth";
+const VK_API_URL = process.env.VK_API_URL ?? "https://api.vk.ru/method";
 const VK_API_VERSION = process.env.VK_API_VERSION ?? "5.199";
 
 type VkTokenResponse = {
@@ -69,24 +69,34 @@ export function getVkRedirectUri(req: {
   return `${protocol}://${host}/api/auth/vk/callback`;
 }
 
+export function getVkCommunityToken(): string | null {
+  return process.env.VK_COMMUNITY_TOKEN ?? null;
+}
+
 export function getVkAuthorizationUrl(params: {
   state: string;
   redirectUri: string;
+  codeChallenge: string;
 }): string {
-  const url = new URL(VK_AUTH_URL);
+  const url = new URL(VK_ID_AUTH_URL);
   url.search = new URLSearchParams({
     client_id: getVkAppId(),
     redirect_uri: params.redirectUri,
     response_type: "code",
     state: params.state,
-    scope: process.env.VK_OAUTH_SCOPE ?? "wall,groups,offline",
-    v: VK_API_VERSION,
+    code_challenge: params.codeChallenge,
+    code_challenge_method: "S256",
+    scope: process.env.VK_OAUTH_SCOPE ?? "vkid.personal_info",
   }).toString();
   return url.toString();
 }
 
 export function randomId(): string {
   return randomBytes(32).toString("base64url");
+}
+
+export function createCodeChallenge(codeVerifier: string): string {
+  return createHash("sha256").update(codeVerifier).digest("base64url");
 }
 
 function getEncryptionKey(): Buffer {
@@ -132,19 +142,31 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 export async function exchangeCode(params: {
   code: string;
+  codeVerifier: string;
+  deviceId: string;
+  state: string;
   redirectUri: string;
 }): Promise<Required<Pick<VkTokenResponse, "access_token">> & VkTokenResponse> {
-  const url = new URL(VK_TOKEN_URL);
-  url.search = new URLSearchParams({
+  const response = await fetch(VK_ID_TOKEN_URL, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
       client_id: getVkAppId(),
-      client_secret: getVkAppSecret(),
+      service_token: getVkAppSecret(),
       redirect_uri: params.redirectUri,
       code: params.code,
-  }).toString();
-  const response = await fetch(url);
+      code_verifier: params.codeVerifier,
+      device_id: params.deviceId,
+      state: params.state,
+    }),
+  });
   const data = await parseJsonResponse<VkTokenResponse>(response);
   if (!data.access_token) {
     throw new Error(data.error_description ?? data.error ?? "VK did not return an access token");
+  }
+  if (data.state && data.state !== params.state) {
+    throw new Error("VK authorization state returned by VK ID does not match");
   }
   return data as Required<Pick<VkTokenResponse, "access_token">> & VkTokenResponse;
 }
@@ -169,7 +191,7 @@ export async function callVkApi<T>(
   if (data.error) {
     if (data.error.error_code === 1051) {
       throw new Error(
-        "VK отклонил публикацию (1051): текущий токен не имеет профиля или права для wall.post. Выйдите и войдите через VK OAuth заново.",
+        "VK отклонил публикацию (1051): VK ID-токен не поддерживает wall.post. Для публикации используйте токен сообщества.",
       );
     }
     throw new Error(

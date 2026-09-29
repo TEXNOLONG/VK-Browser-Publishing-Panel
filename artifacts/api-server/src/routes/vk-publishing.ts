@@ -9,6 +9,7 @@ import {
 import {
   callVkApi,
   decryptToken,
+  getVkCommunityToken,
   getVkCommunities,
 } from "../lib/vk";
 import { getSessionId } from "./vk-auth";
@@ -49,14 +50,14 @@ router.get("/vk/destinations", async (req, res): Promise<void> => {
         name: `${session.profileName} (личная страница)`,
         type: "personal" as const,
         avatarUrl: session.profileAvatarUrl,
-        canPost: true,
+        canPost: false,
       },
       ...communities.map((community) => ({
         ownerId: -community.id,
         name: community.name,
         type: "community" as const,
         avatarUrl: community.avatarUrl,
-        canPost: true,
+        canPost: Boolean(getVkCommunityToken()),
       })),
     ];
     res.json(ListVkDestinationsResponse.parse(destinations));
@@ -83,15 +84,28 @@ router.post("/vk/posts", async (req, res): Promise<void> => {
 
   try {
     const communities = await getVkCommunities(session.accessToken);
+    if (parsed.data.ownerId === session.userId) {
+      res.status(403).json({
+        error: "VK ID не разрешает публикацию на личную страницу. Для этого нужен отдельный одобренный пользовательский токен VK.",
+      });
+      return;
+    }
     const isAllowedDestination =
-      parsed.data.ownerId === session.userId ||
       communities.some((community) => parsed.data.ownerId === -community.id);
     if (!isAllowedDestination) {
       res.status(403).json({ error: "This VK destination is not available to your account." });
       return;
     }
 
-    const result = await callVkApi<{ post_id: number }>("wall.post", session.accessToken, {
+    const communityToken = getVkCommunityToken();
+    if (!communityToken) {
+      res.status(503).json({
+        error: "VK_COMMUNITY_TOKEN не настроен. Добавьте токен сообщества в Replit Secrets.",
+      });
+      return;
+    }
+
+    const result = await callVkApi<{ post_id: number }>("wall.post", communityToken, {
       owner_id: parsed.data.ownerId,
       message: parsed.data.message,
       ...(parsed.data.ownerId < 0 ? { from_group: 1 } : {}),
