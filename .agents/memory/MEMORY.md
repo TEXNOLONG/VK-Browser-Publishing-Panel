@@ -1,0 +1,1 @@
+- [Environment secrets](environment-secrets.md) — Replit blocks agent-created `.env` files; keep a template in the repo and use managed secrets for real values.

@@ -1,15 +1,17 @@
-# [Project name]
+# VK Publisher
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Веб-приложение для входа через VK ID и публикации записей на личной странице и в доступных сообществах.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/vk-publisher run dev` — run the web app (port 20526)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL`, `SESSION_SECRET`, `VK_APP_ID`, `VK_APP_SECRET`, `VK_REDIRECT_URI`
+- Local VK values belong in `.env` (copy `.env.example` first). Replit injects `DATABASE_URL` and `SESSION_SECRET` automatically.
 
 ## Stack
 
@@ -22,23 +24,32 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/vk-publisher` — React/Vite web interface
+- `artifacts/api-server` — Express API and VK ID OAuth callback
+- `lib/api-spec/openapi.yaml` — API contract
+- `lib/db/src/schema` — database schema
+- `.env.example` — local environment variable template
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- VK ID authorization uses PKCE and keeps VK access tokens encrypted in the database.
+- The API is exposed through the `/api` artifact route while the web app stays at `/`.
+- Replit-managed `DATABASE_URL` and `SESSION_SECRET` are preferred over local values.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Sign in with VK ID.
+- Choose a personal page or managed community.
+- Review and publish a text post.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- VK credentials should not be committed to the repository.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The VK trusted redirect URL must match `VK_REDIRECT_URI` exactly, including `/api/auth/vk/callback`.
+- The current Replit dev domain is used in the checked-in non-secret redirect configuration; update it if the domain changes.
 
 ## Pointers
 
