@@ -1,1 +1,2 @@
 - [Environment secrets](environment-secrets.md) — Replit blocks agent-created `.env` files; keep a template in the repo and use managed secrets for real values.
+- [VK ID OAuth](vk-id-oauth.md) — the authorization callback must forward VK's `device_id` with the code during token exchange.

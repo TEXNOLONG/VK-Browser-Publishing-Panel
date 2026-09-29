@@ -62,6 +62,7 @@ router.get("/auth/vk/start", (req, res): void => {
 router.get("/auth/vk/callback", async (req, res): Promise<void> => {
   const state = typeof req.query.state === "string" ? req.query.state : "";
   const code = typeof req.query.code === "string" ? req.query.code : "";
+  const deviceId = typeof req.query.device_id === "string" ? req.query.device_id : "";
   const stateData = oauthStates.get(state);
   oauthStates.delete(state);
 
@@ -76,10 +77,15 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
     res.status(400).send(description);
     return;
   }
+  if (!deviceId) {
+    res.status(400).send("VK authorization did not return a device ID. Start login again.");
+    return;
+  }
 
   try {
     const tokenData = await exchangeCode({
       code,
+      deviceId,
       verifier: stateData.verifier,
       redirectUri: stateData.redirectUri,
     });

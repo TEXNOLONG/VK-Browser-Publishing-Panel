@@ -137,6 +137,7 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 export async function exchangeCode(params: {
   code: string;
+  deviceId: string;
   verifier: string;
   redirectUri: string;
 }): Promise<Required<Pick<VkTokenResponse, "access_token">> & VkTokenResponse> {
@@ -146,6 +147,7 @@ export async function exchangeCode(params: {
     client_secret: getVkAppSecret(),
     redirect_uri: params.redirectUri,
     code: params.code,
+    device_id: params.deviceId,
     code_verifier: params.verifier,
   });
   const response = await fetch(VK_ID_TOKEN_URL, {
