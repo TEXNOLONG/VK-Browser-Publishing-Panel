@@ -73,6 +73,15 @@ export function getVkCommunityToken(): string | null {
   return process.env.VK_COMMUNITY_TOKEN ?? null;
 }
 
+export function getVkCommunityId(): number | null {
+  const rawId = process.env.VK_COMMUNITY_ID;
+  if (!rawId) {
+    return null;
+  }
+  const id = Number(rawId);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 export function getVkAuthorizationUrl(params: {
   state: string;
   redirectUri: string;

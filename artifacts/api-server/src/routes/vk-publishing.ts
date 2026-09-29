@@ -9,6 +9,7 @@ import {
 import {
   callVkApi,
   decryptToken,
+  getVkCommunityId,
   getVkCommunityToken,
   getVkCommunities,
 } from "../lib/vk";
@@ -57,7 +58,9 @@ router.get("/vk/destinations", async (req, res): Promise<void> => {
         name: community.name,
         type: "community" as const,
         avatarUrl: community.avatarUrl,
-        canPost: Boolean(getVkCommunityToken()),
+        canPost:
+          Boolean(getVkCommunityToken()) &&
+          community.id === getVkCommunityId(),
       })),
     ];
     res.json(ListVkDestinationsResponse.parse(destinations));
@@ -98,9 +101,16 @@ router.post("/vk/posts", async (req, res): Promise<void> => {
     }
 
     const communityToken = getVkCommunityToken();
-    if (!communityToken) {
+    const communityId = getVkCommunityId();
+    if (!communityToken || !communityId) {
       res.status(503).json({
-        error: "VK_COMMUNITY_TOKEN не настроен. Добавьте токен сообщества в Replit Secrets.",
+        error: "Для публикации добавьте VK_COMMUNITY_TOKEN в Secrets и VK_COMMUNITY_ID в переменные окружения.",
+      });
+      return;
+    }
+    if (parsed.data.ownerId !== -communityId) {
+      res.status(403).json({
+        error: "Для выбранного сообщества не настроен токен публикации.",
       });
       return;
     }
