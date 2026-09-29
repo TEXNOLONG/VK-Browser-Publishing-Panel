@@ -1,8 +1,8 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-const VK_ID_AUTH_URL = "https://id.vk.com/authorize";
-const VK_ID_TOKEN_URL = "https://id.vk.com/oauth2/auth";
-const VK_API_URL = "https://api.vk.ru/method";
+const VK_STANDALONE_AUTH_URL = "https://oauth.vk.com/authorize";
+const VK_STANDALONE_TOKEN_URL = "https://oauth.vk.com/access_token";
+const VK_API_URL = "https://api.vk.com/method";
 const VK_API_VERSION = process.env.VK_API_VERSION ?? "5.199";
 
 type VkTokenResponse = {
@@ -68,26 +68,17 @@ export function getVkRedirectUri(req: {
 
 export function getVkAuthorizationUrl(params: {
   state: string;
-  codeChallenge: string;
   redirectUri: string;
 }): string {
-  const url = new URL(VK_ID_AUTH_URL);
+  const url = new URL(VK_STANDALONE_AUTH_URL);
   url.search = new URLSearchParams({
     client_id: getVkAppId(),
     redirect_uri: params.redirectUri,
     response_type: "code",
     state: params.state,
-    code_challenge: params.codeChallenge,
-    code_challenge_method: "S256",
     scope: process.env.VK_OAUTH_SCOPE ?? "groups,wall",
   }).toString();
   return url.toString();
-}
-
-export function createPkcePair(): { verifier: string; challenge: string } {
-  const verifier = randomBytes(32).toString("base64url");
-  const challenge = createHash("sha256").update(verifier).digest("base64url");
-  return { verifier, challenge };
 }
 
 export function randomId(): string {
@@ -137,24 +128,16 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 export async function exchangeCode(params: {
   code: string;
-  deviceId: string;
-  verifier: string;
   redirectUri: string;
 }): Promise<Required<Pick<VkTokenResponse, "access_token">> & VkTokenResponse> {
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
+  const url = new URL(VK_STANDALONE_TOKEN_URL);
+  url.search = new URLSearchParams({
     client_id: getVkAppId(),
     client_secret: getVkAppSecret(),
     redirect_uri: params.redirectUri,
     code: params.code,
-    device_id: params.deviceId,
-    code_verifier: params.verifier,
-  });
-  const response = await fetch(VK_ID_TOKEN_URL, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body,
-  });
+  }).toString();
+  const response = await fetch(url);
   const data = await parseJsonResponse<VkTokenResponse>(response);
   if (!data.access_token) {
     throw new Error(data.error_description ?? data.error ?? "VK did not return an access token");
@@ -167,16 +150,17 @@ export async function callVkApi<T>(
   accessToken: string,
   params: Record<string, string | number | boolean | undefined> = {},
 ): Promise<T> {
-  const query = new URLSearchParams({ v: VK_API_VERSION });
+  const query = new URLSearchParams({
+    access_token: accessToken,
+    v: VK_API_VERSION,
+  });
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) {
       query.set(key, String(value));
     }
   }
 
-  const response = await fetch(`${VK_API_URL}/${method}?${query.toString()}`, {
-    headers: { authorization: `Bearer ${accessToken}` },
-  });
+  const response = await fetch(`${VK_API_URL}/${method}?${query.toString()}`);
   const data = await parseJsonResponse<VkApiResponse<T>>(response);
   if (data.error) {
     throw new Error(

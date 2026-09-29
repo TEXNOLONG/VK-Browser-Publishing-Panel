@@ -1,3 +1,3 @@
 - [Environment secrets](environment-secrets.md) — Replit blocks agent-created `.env` files; keep a template in the repo and use managed secrets for real values.
-- [VK ID OAuth](vk-id-oauth.md) — the authorization callback must forward VK's `device_id` with the code during token exchange.
+- [VK Standalone OAuth](vk-id-oauth.md) — this app uses legacy `oauth.vk.com` authorization and token exchange, without VK ID `device_id`/PKCE parameters.
 - [Database bootstrap](database-bootstrap.md) — imported Drizzle projects may need the dev schema pushed before authenticated flows can create sessions.

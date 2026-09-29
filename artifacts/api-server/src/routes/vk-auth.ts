@@ -3,7 +3,6 @@ import { eq } from "drizzle-orm";
 import { db, vkSessionsTable } from "@workspace/db";
 import { GetAuthSessionResponse } from "@workspace/api-zod";
 import {
-  createPkcePair,
   decryptToken,
   encryptToken,
   exchangeCode,
@@ -17,7 +16,7 @@ import {
 const router: IRouter = Router();
 const oauthStates = new Map<
   string,
-  { verifier: string; redirectUri: string; expiresAt: number }
+  { redirectUri: string; expiresAt: number }
 >();
 
 function cleanupOauthStates(): void {
@@ -37,10 +36,8 @@ router.get("/auth/vk/start", (req, res): void => {
   try {
     cleanupOauthStates();
     const state = randomId();
-    const pkce = createPkcePair();
     const redirectUri = getVkRedirectUri(req);
     oauthStates.set(state, {
-      verifier: pkce.verifier,
       redirectUri,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
@@ -50,7 +47,6 @@ router.get("/auth/vk/start", (req, res): void => {
     });
     res.redirect(getVkAuthorizationUrl({
       state,
-      codeChallenge: pkce.challenge,
       redirectUri,
     }));
   } catch (error) {
@@ -62,7 +58,6 @@ router.get("/auth/vk/start", (req, res): void => {
 router.get("/auth/vk/callback", async (req, res): Promise<void> => {
   const state = typeof req.query.state === "string" ? req.query.state : "";
   const code = typeof req.query.code === "string" ? req.query.code : "";
-  const deviceId = typeof req.query.device_id === "string" ? req.query.device_id : "";
   const stateData = oauthStates.get(state);
   oauthStates.delete(state);
 
@@ -77,16 +72,9 @@ router.get("/auth/vk/callback", async (req, res): Promise<void> => {
     res.status(400).send(description);
     return;
   }
-  if (!deviceId) {
-    res.status(400).send("VK authorization did not return a device ID. Start login again.");
-    return;
-  }
-
   try {
     const tokenData = await exchangeCode({
       code,
-      deviceId,
-      verifier: stateData.verifier,
       redirectUri: stateData.redirectUri,
     });
     const profile = await getVkUser(tokenData.access_token, tokenData.user_id);
