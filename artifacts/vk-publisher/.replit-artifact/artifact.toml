@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "VK Publisher"
+description = "Веб-приложение для входа через VK и публикации записей на личной странице и в доступных сообществах."
+version = "1.0.0"
+id = "artifacts/vk-publisher"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20526
+
+[services.development]
+run = "pnpm --filter @workspace/vk-publisher run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/vk-publisher", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/vk-publisher/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20526"
+BASE_PATH = "/"

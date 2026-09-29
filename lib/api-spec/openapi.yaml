@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: VK authentication and session operations
+  - name: publishing
+    description: VK destinations and publishing operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,84 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/vk/start:
+    get:
+      operationId: startVkAuth
+      tags: [auth]
+      summary: Start VK ID authorization
+      responses:
+        "302":
+          description: Redirect to VK ID authorization
+  /auth/session:
+    get:
+      operationId: getAuthSession
+      tags: [auth]
+      summary: Get the current VK session
+      responses:
+        "200":
+          description: Current authentication state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: End the current VK session
+      responses:
+        "204":
+          description: Session ended
+  /vk/destinations:
+    get:
+      operationId: listVkDestinations
+      tags: [publishing]
+      summary: List the personal page and communities available to publish to
+      responses:
+        "200":
+          description: Publish destinations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VkDestination"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /vk/posts:
+    post:
+      operationId: createVkPost
+      tags: [publishing]
+      summary: Publish a text post to VK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VkPostInput"
+      responses:
+        "201":
+          description: Post published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VkPostResult"
+        "400":
+          description: Invalid request or VK rejected the post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +115,66 @@ components:
           type: string
       required:
         - status
+    AuthProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+      required: [id, name, avatarUrl]
+    AuthSession:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        profile:
+          anyOf:
+            - $ref: "#/components/schemas/AuthProfile"
+            - type: "null"
+      required: [authenticated, profile]
+    VkDestination:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [personal, community]
+        avatarUrl:
+          type: ["string", "null"]
+        canPost:
+          type: boolean
+      required: [ownerId, name, type, avatarUrl, canPost]
+    VkPostInput:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+        message:
+          type: string
+          minLength: 1
+          maxLength: 15000
+      required: [ownerId, message]
+    VkPostResult:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+        postId:
+          type: integer
+        publishedAt:
+          type: string
+          format: date-time
+      required: [ownerId, postId, publishedAt]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 
