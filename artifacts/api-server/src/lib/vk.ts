@@ -1,6 +1,6 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-const VK_ID_AUTH_URL = "https://id.vk.com/oauth2/auth";
+const VK_ID_AUTH_URL = "https://id.vk.com/authorize";
 const VK_ID_TOKEN_URL = "https://id.vk.com/oauth2/auth";
 const VK_API_URL = "https://api.vk.ru/method";
 const VK_API_VERSION = process.env.VK_API_VERSION ?? "5.199";
