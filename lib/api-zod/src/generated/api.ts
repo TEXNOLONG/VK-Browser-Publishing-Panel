@@ -18,7 +18,7 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary Start VK ID authorization
+ * @summary Start VK authorization
  */
 export const StartVkAuthResponse = zod.void()
 

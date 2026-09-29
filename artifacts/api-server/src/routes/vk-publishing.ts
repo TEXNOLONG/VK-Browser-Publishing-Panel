@@ -51,7 +51,7 @@ router.get("/vk/destinations", async (req, res): Promise<void> => {
         name: `${session.profileName} (личная страница)`,
         type: "personal" as const,
         avatarUrl: session.profileAvatarUrl,
-        canPost: false,
+        canPost: true,
       },
       ...communities.map((community) => ({
         ownerId: -community.id,
@@ -88,9 +88,15 @@ router.post("/vk/posts", async (req, res): Promise<void> => {
   try {
     const communities = await getVkCommunities(session.accessToken);
     if (parsed.data.ownerId === session.userId) {
-      res.status(403).json({
-        error: "VK ID не разрешает публикацию на личную страницу. Для этого нужен отдельный одобренный пользовательский токен VK.",
+      const result = await callVkApi<{ post_id: number }>("wall.post", session.accessToken, {
+        owner_id: parsed.data.ownerId,
+        message: parsed.data.message,
       });
+      res.status(201).json(CreateVkPostResponse.parse({
+        ownerId: parsed.data.ownerId,
+        postId: result.post_id,
+        publishedAt: new Date().toISOString(),
+      }));
       return;
     }
     const isAllowedDestination =

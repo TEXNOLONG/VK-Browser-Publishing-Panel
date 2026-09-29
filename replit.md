@@ -1,6 +1,6 @@
 # VK Publisher
 
-Веб-приложение для входа через VK ID и публикации записей на личной странице и в доступных сообществах.
+Веб-приложение для входа через VK и публикации записей на личной странице и в доступных сообществах.
 
 ## Run & Operate
 
@@ -26,21 +26,21 @@
 ## Where things live
 
 - `artifacts/vk-publisher` — React/Vite web interface
-- `artifacts/api-server` — Express API and VK ID OAuth callback
+- `artifacts/api-server` — Express API and VK OAuth callback
 - `lib/api-spec/openapi.yaml` — API contract
 - `lib/db/src/schema` — database schema
 - `.env.example` — local environment variable template
 
 ## Architecture decisions
 
-- VK ID uses Authorization Code + PKCE for sign-in and destination discovery; VK ID tokens are encrypted in the database.
-- Community publication uses a separate `VK_COMMUNITY_TOKEN` stored as a Replit Secret because VK ID tokens cannot call `wall.post`.
+- VK uses the legacy OAuth Authorization Code flow; the backend exchanges the code with `client_secret`, and access tokens are encrypted in the database.
+- Community publication uses a separate `VK_COMMUNITY_TOKEN` stored as a Replit Secret; community posting remains a separate setup step.
 - The API is exposed through the `/api` artifact route while the web app stays at `/`.
 - Replit-managed `DATABASE_URL` and `SESSION_SECRET` are preferred over local values.
 
 ## Product
 
-- Sign in with VK ID.
+- Sign in with VK.
 - Choose a personal page or managed community.
 - Review and publish a text post.
 
@@ -52,7 +52,7 @@
 
 - The VK trusted redirect URL must match `VK_REDIRECT_URI` exactly, including `/api/auth/vk/callback`.
 - The current Replit dev domain is used in the checked-in non-secret redirect configuration; update it if the domain changes.
-- Personal-wall publishing is not available with a VK ID token; the UI must keep that destination non-publishable unless a separately approved user token is added.
+- Personal-wall publishing uses the server-side user token and requires the `wall` scope. Community publishing remains disabled until its separate community token flow is configured.
 
 ## Pointers
 

@@ -119,7 +119,7 @@ function LoginState() {
           <h1 className="max-w-xl font-display text-5xl leading-[.99] tracking-[-.045em] text-[hsl(var(--foreground))] sm:text-7xl">Publish with <em className="text-[hsl(var(--primary))] not-italic">certainty.</em></h1>
           <p className="mt-7 max-w-lg text-base leading-7 text-[hsl(var(--muted-foreground))] sm:text-lg">One focused workspace for your personal page and the communities you care for. See exactly where your words are going before they leave.</p>
           <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-[hsl(var(--foreground)/.72)]">
-            <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-[hsl(var(--primary))]" /> Secure VK ID sign-in</span>
+            <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-[hsl(var(--primary))]" /> Secure VK sign-in</span>
             <span className="inline-flex items-center gap-2"><CheckCircle2 size={16} className="text-[hsl(var(--primary))]" /> Review before posting</span>
           </div>
         </section>
@@ -218,7 +218,7 @@ function Workspace({ profile }: { profile: { id: number; name: string; avatarUrl
               {selected && <div className="mt-5 border-t border-[hsl(var(--border))] pt-4" data-testid={`status-selected-destination-${selected.ownerId}`}><p className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]"><CheckCircle2 size={14} className="text-emerald-600" /> Ready to publish to <span className="font-bold text-[hsl(var(--foreground))]">{selected.name}</span></p></div>}
             </aside>
           </div>
-          <footer className="mt-12 flex flex-col gap-3 border-t border-[hsl(var(--border))] pt-5 text-[11px] text-[hsl(var(--muted-foreground))] sm:flex-row sm:items-center sm:justify-between"><span className="flex items-center gap-2"><ShieldCheck size={14} /> Your message stays in this workspace until you publish.</span><span data-testid="text-profile-id">VK ID · {profile.id}</span></footer>
+          <footer className="mt-12 flex flex-col gap-3 border-t border-[hsl(var(--border))] pt-5 text-[11px] text-[hsl(var(--muted-foreground))] sm:flex-row sm:items-center sm:justify-between"><span className="flex items-center gap-2"><ShieldCheck size={14} /> Your message stays in this workspace until you publish.</span><span data-testid="text-profile-id">VK account · {profile.id}</span></footer>
         </main>
       </div>
     </div>

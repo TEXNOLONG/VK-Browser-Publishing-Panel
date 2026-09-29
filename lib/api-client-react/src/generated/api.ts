@@ -142,7 +142,7 @@ export const getStartVkAuthUrl = () => {
 }
 
 /**
- * @summary Start VK ID authorization
+ * @summary Start VK authorization
  */
 export const startVkAuth = async ( options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
@@ -189,7 +189,7 @@ export type StartVkAuthQueryError = ErrorType<void>
 
 
 /**
- * @summary Start VK ID authorization
+ * @summary Start VK authorization
  */
 
 export function useStartVkAuth<TData = Awaited<ReturnType<typeof startVkAuth>>, TError = ErrorType<void>>(

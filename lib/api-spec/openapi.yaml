@@ -32,10 +32,10 @@ paths:
     get:
       operationId: startVkAuth
       tags: [auth]
-      summary: Start VK ID authorization
+      summary: Start VK authorization
       responses:
         "302":
-          description: Redirect to VK ID authorization
+          description: Redirect to VK authorization
   /auth/session:
     get:
       operationId: getAuthSession
