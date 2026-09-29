@@ -33,8 +33,8 @@
 
 ## Architecture decisions
 
-- VK uses the legacy OAuth Authorization Code flow; the backend exchanges the code with `client_secret`, and access tokens are encrypted in the database.
-- Community publication uses a separate `VK_COMMUNITY_TOKEN` stored as a Replit Secret; community posting remains a separate setup step.
+- VK ID uses Authorization Code + PKCE for sign-in and destination discovery; VK ID tokens are encrypted in the database.
+- Community publication uses a separate `VK_COMMUNITY_TOKEN` stored as a Replit Secret because community wall.post calls must use a community token.
 - The API is exposed through the `/api` artifact route while the web app stays at `/`.
 - Replit-managed `DATABASE_URL` and `SESSION_SECRET` are preferred over local values.
 
@@ -52,7 +52,7 @@
 
 - The VK trusted redirect URL must match `VK_REDIRECT_URI` exactly, including `/api/auth/vk/callback`.
 - The current Replit dev domain is used in the checked-in non-secret redirect configuration; update it if the domain changes.
-- Personal-wall publishing uses the server-side user token and requires the `wall` scope. Community publishing remains disabled until its separate community token flow is configured.
+- Personal-wall publishing is intentionally disabled because VK ID tokens cannot call `wall.post`. Community publishing uses `VK_COMMUNITY_TOKEN` and `VK_COMMUNITY_ID`.
 
 ## Pointers
 
